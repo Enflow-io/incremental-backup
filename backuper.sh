@@ -6,6 +6,21 @@
 
 # ------------------------------------------------------------------
 
+
+# Settings
+
+# What to backup
+# Ex: TO_BACKUP="$HOME/some-path", TO_BACKUP=~/path
+TO_BACKUP="$HOME/test-inc-backup/to_backup"
+WHERE_TO_BACKUP="${TO_BACKUP}/../backup"
+SNAPSHOTS="${WHERE_TO_BACKUP}/snapshots"
+INDEX="${SNAPSHOTS}/index"
+
+WHERE_TO_RESTORE="${WHERE_TO_BACKUP}/../restored"
+
+# /Settigns
+
+
 SUBJECT="Enflow.io backup script"
 VERSION=0.1.0
 USAGE="Usage: ./backuper backup \
@@ -59,32 +74,35 @@ touch $LOCK_FILE
 
 # -----------------------------------------------------------------
 function command_backup {
+    mkdir -p $SNAPSHOTS
     tar \
         --create \
         --no-check-device \
-        --file=./snapshots/`date +%s`.tar \
-        --listed-incremental=./snapshots/index \
+        --file=${SNAPSHOTS}/`date +%s`.tar \
+        --listed-incremental=$INDEX \
         --verbose \
-        ./to_backup
+        $TO_BACKUP
+
+    echo 'Backup is done!'
 }
 
 function command_restore() {
     UPTO="$param.tar"
-    #UPTO="1522934331.tar"
-    for a in `ls -1 ./snapshots/*.tar` 
+    mkdir -p $WHERE_TO_RESTORE
+    for a in `ls -1 $SNAPSHOTS/*.tar` 
     do 
-    tar \
-            --extract \
-            --listed-incremental=./snapshots/index \
-            --file=$a \
-            --directory=./restored
+        tar \
+                --extract \
+                --listed-incremental=$INDEX \
+                --file=$a \
+                --directory=$WHERE_TO_RESTORE
 
-    # echo $a
-    # echo ./snapshots/${UPTO}
-    if [ $a == ./snapshots/${UPTO} ]
-    then
-    break
-    fi
+        # [ $a == "${SNAPSHOTS}/${UPTO}" ] && BOOL=0 || BOOL=1
+        # echo $BOOL
+        if [ $a == "$SNAPSHOTS/${UPTO}" ]
+        then
+        break
+        fi
     done
 
 }
