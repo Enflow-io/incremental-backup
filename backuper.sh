@@ -1,6 +1,6 @@
 #!/bin/bash
 # ------------------------------------------------------------------
-# [Enflow.io] Backepr
+# [Enflow.io] Backuper
 #          Description
 #          in OSX you may need: brew install gnu-tar --with-default-names
 
@@ -17,6 +17,10 @@ SNAPSHOTS="${WHERE_TO_BACKUP}/snapshots"
 INDEX="${SNAPSHOTS}/index"
 
 WHERE_TO_RESTORE="${WHERE_TO_BACKUP}/../restored"
+
+# AWS SETTINGS
+S3_PATH=s3://enflow-server/test-backup
+
 
 # /Settigns
 
@@ -75,14 +79,23 @@ touch $LOCK_FILE
 # -----------------------------------------------------------------
 function command_backup {
     mkdir -p $SNAPSHOTS
-    tar \
-        --create \
-        --no-check-device \
-        --file=${SNAPSHOTS}/`date +%s`.tar \
-        --listed-incremental=$INDEX \
-        --verbose \
-        $TO_BACKUP
+    # tar \
+    #     --create \
+    #     --no-check-device \
+    #     --file=${SNAPSHOTS}/`date +%s`.tar \
+    #     --listed-incremental=$INDEX \
+    #     --verbose \
+    #     $TO_BACKUP
 
+    if [ -z ${S3_PATH+x} ]; 
+    then    
+        echo ''
+    else    
+        aws s3 sync $WHERE_TO_BACKUP $S3_PATH
+    fi
+
+
+    
     echo 'Backup is done!'
 }
 
